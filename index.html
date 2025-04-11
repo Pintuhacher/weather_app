@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weather App</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
+    integrity="sha512-z3gLpd7yknf1YoNbCzqRKc4qyor8gaKU1qmn+CShxbuBusANI9QpRohGBreCFkKxLhei6S9CQXFEbbKuqLg0DA=="
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:wght@500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-image: url(https://www-cdn.eumetsat.int/files/styles/16_9_large/s3/2021-10/storm-Single-cell-thunderstorm-cloud_0.jpg?h=e5aec6c8&itok=g4JvmBRa);
+      background-size: cover;
+      background-position: center;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-family: 'Lora', serif;
+    }
+
+    #weather-container {
+      text-align: center;
+      background: rgba(255, 255, 255, .1);
+      backdrop-filter: blur(20px);
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      color: white;
+      border: 3.5px solid rgba(255, 255, 255, .3);
+    }
+
+    #search-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    #location-icon {
+      cursor: pointer;
+      font-size: 1.7rem;
+    }
+
+    #search-input {
+      flex: 1;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin: 0 10px;
+      font-size: 1.25rem;
+      font-family: 'Lora', serif;
+      background: rgba(255, 255, 255, .1);
+      color: white;
+    }
+
+    #search-icon {
+      cursor: pointer;
+      font-size: 1.7rem;
+    }
+
+    #weather-info {
+      display: none;
+      margin-top: 20px;
+      margin-bottom: 20px;
+      font-size: 1.25rem;
+    }
+
+    #weather-info div {
+      padding: 5px;
+    }
+
+    #temperature {
+      font-size: 3rem;
+      font-weight: bold;
+    }
+
+    #weather-icon img {
+      max-width: 100%;
+      max-height: 100%;
+      width: 150px;
+      height: 150px;
+    }
+
+    @media only screen and (max-width: 600px) {
+      #search-bar {
+        flex-direction: row;
+        justify-content: space-around;
+        margin-top: 10px;
+      }
+
+      #search-input {
+        margin: 4px;
+      }
+
+      #weather-container {
+        padding: 10px;
+        margin: 5px 0px 5px 0px;
+      }
+
+      #weather-info {
+        font-size: 1rem;
+      }
+
+      #temperature {
+        font-size: 2rem;
+      }
+    }
+  </style>
+  <script>
+    const apiKey = 'e916fb2b75a20d09eacea443cf1c220b';
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const latitude = position.coords.latitude;
+          const longitude = position.coords.longitude;
+          fetchWeatherByCoordinates(latitude, longitude);
+        });
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+
+    function searchWeather() {
+      const city = document.getElementById('search-input').value;
+      if (city.trim() !== '') {
+        fetchWeatherByCity(city);
+      }
+    }
+
+    async function fetchWeatherByCoordinates(latitude, longitude) {
+      const apiUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${apiKey}`;
+      await fetchWeather(apiUrl);
+    }
+
+    async function fetchWeatherByCity(city) {
+      const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}`;
+      await fetchWeather(apiUrl);
+    }
+
+    async function fetchWeather(apiUrl) {
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (response.ok) {
+          updateWeatherInfo(data);
+        } else {
+          alert(`Error: ${data.message}`);
+        }
+      } catch (error) {
+        alert('Error fetching weather data');
+        console.error('Error fetching weather data:', error);
+      }
+    }
+
+    function updateWeatherInfo(data) {
+      document.getElementById('weather-icon').innerHTML = `<img src="http://openweathermap.org/img/w/${data.weather[0].icon}.png" alt="Weather Icon" >`;
+
+      document.getElementById('temperature').innerText = ` ${((data.main.temp - 273.15).toFixed(2))}°C`;
+      document.getElementById('description').innerText = ` ${data.weather[0].description}`;
+      document.getElementById('precipitation').innerText = `Precipitation: ${data.weather[0].main}`;
+      document.getElementById('humidity').innerText = `Humidity: ${data.main.humidity}%`;
+
+      document.getElementById('weather-info').style.display = 'block';
+    }
+  </script>
+</head>
+
+<body>
+  <div id="weather-container">
+    <div id="search-bar">
+      <i class="fa-solid fa-location-dot" id="location-icon" onclick="getLocation()"></i>
+      <input type="text" id="search-input" placeholder="Enter city">
+      <i class="fa-solid fa-magnifying-glass" id="search-icon" onclick="searchWeather()"></i>
+    </div>
+
+    <div id="weather-info">
+      <div id="weather-icon"></div>
+      <div id="temperature"></div>
+      <div id="description"></div>
+      <br>
+      <i class="fa-solid fa-cloud" style="font-size: 1.6rem;"></i>
+      <div id="precipitation"></div>
+      <i class="fa-solid fa-sun" style="font-size: 1.6rem;"></i>
+      <div id="humidity"></div>
+    </div>
+  </div>
+</body>
+
+</html>
